@@ -13,20 +13,19 @@ import math
 
 #DemoWheel class
 class DemoWheel(QGraphicsItem):
-    def __init__(self, x, y, diameter, titles):
+    def __init__(self, xc, yc, titles, settings):
         super(DemoWheel, self).__init__()
+        diameter = float(settings.get_value('Wheel', 'size'))
         radius = diameter / 2
-        xc = x + radius
-        yc = y + radius
-        self.setPos(xc, yc)
+        self.setPos(xc+radius, yc+radius)
         self.adapter = DemoWheelAdapter(self, self)
 
-        wheel = QGraphicsEllipseItem(x, y, diameter, diameter, self)
+        wheel = QGraphicsEllipseItem(xc-radius, yc-radius, diameter, diameter, self)
 
-        brush = QBrush(Qt.GlobalColor.blue)
+        brush = QBrush(settings.get_value('Wheel', 'bg_color'))
         wheel.setBrush(brush)
 
-        pen = QPen(Qt.GlobalColor.darkBlue)
+        pen = QPen(settings.get_value('Wheel', 'fg_color'))
         pen.setWidth(2)
         wheel.setPen(pen)
 
@@ -44,14 +43,14 @@ class DemoWheel(QGraphicsItem):
                 tx = (x+xy[0])/2
                 ty = (y+xy[1])/2
                 title.setPos(tx, ty)
-                angle = calc_clockwise_angle(tx, ty, radius)
+                angle = calc_clockwise_angle(tx, ty, xc, yc)
                 title.setRotation(angle)
                 xy = [x,y]
         title = QGraphicsTextItem(titles[0], self)
         tx = (xy[0]+xy1[0])/2
         ty = (xy[1]+xy1[1])/2
         title.setPos(tx, ty)
-        angle = calc_clockwise_angle(tx, ty, radius)
+        angle = calc_clockwise_angle(tx, ty, xc, yc)
         title.setRotation(angle)
 
 #adapter class to fascilitate animation
@@ -69,17 +68,17 @@ class DemoWheelAdapter(QObject):
     rotation = pyqtProperty(float, __get_rotation, __set_rotation)
 
 #utility for figuring out the rotaion of a title
-def calc_clockwise_angle(x, y, radius):
-    delta = math.sqrt(math.pow(radius-x,2)+math.pow(radius-y,2))
-    if x < radius:
-        xd = radius - x
+def calc_clockwise_angle(x, y, xc, yc):
+    delta = math.sqrt(math.pow(xc-x,2)+math.pow(yc-y,2))
+    if x < xc:
+        xd = xc - x
         theta = math.degrees(math.acos(xd/delta))
-        if y > radius:
+        if y > yc:
             theta = 360 - theta
     else:
-        xd = x - radius
+        xd = x - xc
         theta = math.degrees(math.acos(xd/delta))
-        if y < radius:
+        if y < yc:
             theta = 180 - theta
         else:
             theta = theta + 180

@@ -15,7 +15,7 @@ app = QApplication([])
 
 #initialize the main window
 mw = MainWindow()
-mw.show()
+mw.showMaximized()
 
 #run the window and exit when done
 sys.exit(app.exec())
