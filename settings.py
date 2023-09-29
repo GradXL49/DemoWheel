@@ -10,15 +10,18 @@ import os
 from PyQt6.QtGui import QColor
 
 class Settings():
-    def __init__(self, mainwindow):
+    def __init__(self):
         self.config = configparser.ConfigParser()
-        self.mainwindow = mainwindow
-        #if the file doesn't exist, create it first
+        #if the file doesn't exist, create it first with defaults
         if not os.path.isfile('settings.ini'):
             self.config['Wheel'] = {
-                'size': 500,
-                'bg_color': '255,100,0',
-                'fg_color': '0,0,0'
+                'size': '800',
+                'bg_color': '255,100,0,255',
+                'fg_color': '0,0,0,255',
+                'bg_type': 'Solid',
+                'bg_color_0': '255,0,0,255',
+                'bg_color_1': '0,255,0,255',
+                'bg_color_2': '0,0,255,255'
             }
             self.save_config()
         
@@ -34,12 +37,10 @@ class Settings():
         value = self.config[section][setting]
         if 'color' in setting:
             color = value.split(',')
-            return QColor(int(color[0]), int(color[1]), int(color[2]))
+            return QColor(int(color[0]), int(color[1]), int(color[2]), int(color[3]))
         return value
     
     def set_value(self, section, setting, value):
         if isinstance(value, QColor):
-            value = value.getRgb()
-            print(value)
-        self.config[section][setting] = value
-        self.mainwindow.update_settings()
+            value = str(value.getRgb()).replace('(', '').replace(')', '').replace(' ', '')
+        self.config[section][setting] = str(value)

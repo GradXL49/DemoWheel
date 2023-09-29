@@ -8,7 +8,7 @@ Made with assistance from https://engineersjourney.wordpress.com/2012/09/05/pyqt
 #imports
 from PyQt6.QtWidgets import *
 from PyQt6.QtGui import QBrush, QPen, QPolygonF
-from PyQt6.QtCore import Qt, QPointF, QObject, pyqtProperty
+from PyQt6.QtCore import QPointF, QObject, pyqtProperty
 import math
 
 #DemoWheel class
@@ -45,6 +45,7 @@ class DemoWheel(QGraphicsItem):
                 title.setPos(tx, ty)
                 angle = calc_clockwise_angle(tx, ty, xc, yc)
                 title.setRotation(angle)
+                title.setDefaultTextColor(settings.get_value('Wheel', 'fg_color'))
                 xy = [x,y]
         title = QGraphicsTextItem(titles[0], self)
         tx = (xy[0]+xy1[0])/2
@@ -52,6 +53,7 @@ class DemoWheel(QGraphicsItem):
         title.setPos(tx, ty)
         angle = calc_clockwise_angle(tx, ty, xc, yc)
         title.setRotation(angle)
+        title.setDefaultTextColor(settings.get_value('Wheel', 'fg_color'))
 
 #adapter class to fascilitate animation
 class DemoWheelAdapter(QObject):
