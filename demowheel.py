@@ -7,14 +7,17 @@ Made with assistance from https://engineersjourney.wordpress.com/2012/09/05/pyqt
 
 #imports
 from PyQt6.QtWidgets import *
-from PyQt6.QtGui import QBrush, QPen, QPolygonF
+from PyQt6.QtGui import QBrush, QPen, QPolygonF, QFont
 from PyQt6.QtCore import QPointF, QObject, pyqtProperty
 import math
 
 #DemoWheel class
 class DemoWheel(QGraphicsItem):
-    def __init__(self, xc, yc, titles, settings):
+    def __init__(self, xc, yc, settings):
         super(DemoWheel, self).__init__()
+        self.xc = xc
+        self.yc = yc
+        self.settings = settings
         diameter = float(settings.get_value('Wheel', 'size'))
         radius = diameter / 2
         self.setPos(xc+radius, yc+radius)
@@ -29,6 +32,9 @@ class DemoWheel(QGraphicsItem):
         pen.setWidth(2)
         wheel.setPen(pen)
 
+        self.font = QFont()
+        self.font.setPointSize(int(settings.get_value('Text', 'font_size')))
+        titles = settings.get_section_list('Titles')
         l = len(titles)
         for i in range(l):
             x = radius * math.cos(2*math.pi*i/l) + xc
@@ -39,21 +45,40 @@ class DemoWheel(QGraphicsItem):
                 xy1 = [x,y]
                 xy = [x,y]
             else:
-                title = QGraphicsTextItem(titles[i], self)
-                tx = (x+xy[0])/2
-                ty = (y+xy[1])/2
-                title.setPos(tx, ty)
-                angle = calc_clockwise_angle(tx, ty, xc, yc)
-                title.setRotation(angle)
-                title.setDefaultTextColor(settings.get_value('Wheel', 'fg_color'))
+                self.draw_title(titles[i], x, y, xy[0], xy[1])
                 xy = [x,y]
-        title = QGraphicsTextItem(titles[0], self)
-        tx = (xy[0]+xy1[0])/2
-        ty = (xy[1]+xy1[1])/2
-        title.setPos(tx, ty)
-        angle = calc_clockwise_angle(tx, ty, xc, yc)
+        self.draw_title(titles[0], xy[0], xy[1], xy1[0], xy1[1])
+
+    def draw_title(self, text, x1, y1, x2, y2):
+        tx = (x1+x2)/2
+        ty = (y1+y2)/2
+        
+        theta = math.atan((y2-y1)/(x2-x1))
+        offset = self.font.pointSize()
+        if ty > self.yc:
+            offset = -offset
+        off_x = offset * math.cos(theta)
+        off_y = offset * math.sin(theta)
+
+        title = QGraphicsTextItem(text, self)
+        title.setPos(tx+off_x, ty+off_y)
+        angle = calc_clockwise_angle(tx, ty, self.xc, self.yc)
         title.setRotation(angle)
-        title.setDefaultTextColor(settings.get_value('Wheel', 'fg_color'))
+        title.setFont(self.font)
+        title.setDefaultTextColor(self.settings.get_value('Text', 'text_color'))
+        title.setZValue(1)
+
+        if self.settings.get_value('Text', 'shadow_bool'):
+            theta = math.atan((tx-self.xc)/(ty-self.yc))
+            offset = offset/2
+            off_x = offset * math.cos(theta)
+            off_y = offset * math.sin(theta)
+
+            shadow = QGraphicsTextItem(text, self)
+            shadow.setPos(tx+off_x, ty+off_y)
+            shadow.setRotation(angle)
+            shadow.setFont(self.font)
+            shadow.setDefaultTextColor(self.settings.get_value('Text', 'shadow_color'))
 
 #adapter class to fascilitate animation
 class DemoWheelAdapter(QObject):

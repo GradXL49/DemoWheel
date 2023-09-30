@@ -6,7 +6,6 @@ Code for the window that contains the settings for the main window.
 
 #imports
 from PyQt6.QtWidgets import *
-#from PyQt6.QtGui import QColorDialog
 
 class SettingsWindow(QWidget):
     def __init__(self, mainwindow, settings):
@@ -18,6 +17,7 @@ class SettingsWindow(QWidget):
 
         #gui elements
         self.setWindowTitle("Settings")
+        self.setFixedSize(400, 400)
         tabs = QTabWidget()
         #tabs.setTabPosition(QTabWidget.TabPosition.West)
         btn_submit = QPushButton("Apply")
@@ -26,6 +26,9 @@ class SettingsWindow(QWidget):
         #Wheel tab
         tab_wheel = self.init_tab_wheel()
         tabs.addTab(tab_wheel, "Wheel")
+
+        #Titles tab
+        
 
         #layout
         layout = QGridLayout()
@@ -37,7 +40,7 @@ class SettingsWindow(QWidget):
     def submit(self):
         for category in self.options:
             for option in self.options[category]:
-                if 'color' not in option and 'type' not in option:
+                if 'color' not in option and 'type' not in option and 'list' not in option:
                     self.settings.set_value(category, option, self.options[category][option].value())
         
         self.settings.save_config()
@@ -73,16 +76,25 @@ class SettingsWindow(QWidget):
         wheel_bg_type.setCurrentText(bg_type)
         wheel_bg_type.activated.connect(lambda: self.wheel_bg_type_change())
 
+        wheel_colors = self.settings.get_section('Wheel_Colors')
         wheel_bg_color_list = QListWidget()
+        for i in range(len(wheel_colors)):
+            wheel_bg_color_list.addItem('Color '+str(i))
+        wheel_bg_color_list.setHidden(True)
 
         if bg_type == 'Solid':
             wheel_bg_color.setHidden(False)
+        elif bg_type == 'Multicolor':
+            wheel_bg_color_list.setHidden(False)
+        else:
+            pass
         
         self.options['Wheel'] = {
             'size': wheel_size,
             'fg_color': wheel_fg_color,
-            'bg_type': wheel_bg_type,
-            'bg_color': wheel_bg_color
+            #'bg_type': wheel_bg_type,
+            'bg_color': wheel_bg_color,
+            #'bg_color_list': wheel_bg_color_list
         }
 
         tab_wheel_layout = QVBoxLayout()
@@ -92,12 +104,16 @@ class SettingsWindow(QWidget):
 
         return tab_wheel
     
-    #handle dynamic settings for wheel bg color
+    #handle dynamic settings for wheel bg type
     def wheel_bg_type_change(self):
         bg_type = self.options['Wheel']['bg_type'].currentText()
         self.settings.set_value('Wheel', 'bg_type', bg_type)
 
         if bg_type == 'Solid':
             self.options['Wheel']['bg_color'].setHidden(False)
-        else:
+            self.options['Wheel']['bg_color_list'].setHidden(True)
+        elif bg_type == 'Multicolor':
             self.options['Wheel']['bg_color'].setHidden(True)
+            self.options['Wheel']['bg_color_list'].setHidden(False)
+        else:
+            pass

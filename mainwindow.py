@@ -19,18 +19,6 @@ class MainWindow(QWidget):
         super().__init__()
         self.settings = Settings()
         self.settings_window = SettingsWindow(self, self.settings)
-        self.titles = [
-            "Tony Hawk Pro Skater 2",
-            "Star Wars: The Force Unleashed",
-            "Borderlands",
-            "Toe Jam and Earl",
-            "Serious Sam",
-            "PC Building Simulator",
-            "Avatar",
-            "Brothers in Arms",
-            "LOTR Online",
-            "Mario Kart"
-        ]
         self.spinning = False
 
         #gui elements
@@ -71,7 +59,7 @@ class MainWindow(QWidget):
 
     def draw_scene(self):
         self.canvas = QGraphicsScene()
-        self.wheel = DemoWheel(0, 0, self.titles, self.settings)
+        self.wheel = DemoWheel(0, 0, self.settings)
         self.canvas.addItem(self.wheel)
         self.canvas.addItem(self.draw_pointer())
 
