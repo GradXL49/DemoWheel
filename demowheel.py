@@ -69,8 +69,7 @@ class DemoWheel(QGraphicsItem):
         title.setZValue(1)
 
         if self.settings.get_value('Text', 'shadow_bool'):
-            theta = math.atan((tx-self.xc)/(ty-self.yc))
-            offset = offset/2
+            offset = offset * 0.9
             off_x = offset * math.cos(theta)
             off_y = offset * math.sin(theta)
 

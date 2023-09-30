@@ -28,7 +28,7 @@ class Settings():
             self.config['Text'] = {
                 'font_size': '15',
                 'text_color': '0,0,0,255',
-                'shadow_bool': 'true',
+                'shadow_bool': 'False',
                 'shadow_color': '255,255,255,255'
             }
             self.config['Titles'] = {
@@ -53,6 +53,7 @@ class Settings():
         with open('settings.ini', 'w') as configfile:
             self.config.write(configfile)
     
+    #retrieve the requested setting value
     def get_value(self, section, setting):
         value = self.config[section][setting]
         if 'color' in setting:
@@ -65,16 +66,25 @@ class Settings():
                 value = False
         return value
     
+    #retrieve the requested section tuple
     def get_section(self, section):
         return self.config[section]
     
+    #retrieve the requested section as a list of its values
     def get_section_list(self, section):
         values = []
         for setting in self.config[section]:
             values.append(self.get_value(section, setting))
         return values
     
+    #set the specified setting to the given value
     def set_value(self, section, setting, value):
         if isinstance(value, QColor):
             value = str(value.getRgb()).replace('(', '').replace(')', '').replace(' ', '')
         self.config[section][setting] = str(value)
+
+    #reset the settings of the specified section with the given list of values
+    def set_section_list(self, section, setting, values):
+        self.config[section] = {}
+        for i in range(len(values)):
+            self.set_value(section, setting+str(i), values[i])
