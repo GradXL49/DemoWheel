@@ -62,6 +62,10 @@ class MainWindow(QWidget):
         self.wheel = DemoWheel(0, 0, self.settings)
         self.canvas.addItem(self.wheel)
         self.canvas.addItem(self.draw_pointer())
+        if self.settings.get_value('Background', 'type') == 'Solid':
+            self.canvas.setBackgroundBrush(QBrush(self.settings.get_value('Background', 'color')))
+        elif self.settings.get_value('Background', 'type') == 'Image':
+            pass #fill the background with the selected image
 
         #animation
         self.spin_anim = QPropertyAnimation(self.wheel.adapter, b'rotation')

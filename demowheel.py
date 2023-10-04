@@ -54,7 +54,7 @@ class DemoWheel(QGraphicsItem):
         ty = (y1+y2)/2
         
         theta = math.atan((y2-y1)/(x2-x1))
-        offset = self.font.pointSize()
+        offset = self.font.pointSize()*16/12 #convert point size to pixels
         if ty > self.yc:
             offset = -offset
         off_x = offset * math.cos(theta)

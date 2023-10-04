@@ -43,6 +43,11 @@ class Settings():
                 'title_8': "LOTR Online",
                 'title_9': "Mario Kart"
             }
+            self.config['Background'] = {
+                'type': 'Image',
+                'color': '60,60,60,255',
+                'image': 'images/wave.jpg'
+            }
             self.save_config()
         
         #read the settings file and hold the configuration
