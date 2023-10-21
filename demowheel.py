@@ -25,15 +25,17 @@ class DemoWheel(QGraphicsItem):
         self.setPos(xc+self.radius, yc+self.radius)
         self.adapter = DemoWheelAdapter(self, self)
 
-        wheel = QGraphicsEllipseItem(xc-self.radius, yc-self.radius, diameter, diameter, self)
+        wheel = QGraphicsEllipseItem(xc-self.radius, yc-self.radius, diameter, diameter)
         self.wheel_rect = wheel.rect()
 
         brush = QBrush(settings.get_value('Wheel', 'bg_color'))
         wheel.setBrush(brush)
 
-        pen = QPen(settings.get_value('Wheel', 'fg_color'))
-        pen.setWidth(2)
-        wheel.setPen(pen)
+        self.pen = QPen(settings.get_value('Wheel', 'fg_color'))
+        self.pen.setWidth(2)
+        if not self.multicolor:
+            wheel.setPen(self.pen)
+            wheel.setParentItem(self)
 
         self.font = QFont()
         self.font.setPointSize(int(settings.get_value('Text', 'font_size')))
@@ -44,9 +46,11 @@ class DemoWheel(QGraphicsItem):
             x = self.radius * math.cos(2*math.pi*i/l) + xc
             y = self.radius * math.sin(2*math.pi*i/l) + yc
             if self.multicolor:
-                    self.draw_piece(x, y, self.bg_colors[i%len(self.bg_colors)])
-            line = QGraphicsPolygonItem(QPolygonF([QPointF(xc, yc),QPointF(x, y)]), self)
-            line.setPen(pen)
+                self.draw_piece(x, y, self.bg_colors[i%len(self.bg_colors)])
+            else:
+                print('got here')
+                line = QGraphicsPolygonItem(QPolygonF([QPointF(xc, yc),QPointF(x, y)]), self)
+                line.setPen(self.pen)
             if i == 0:
                 xy1 = [x,y]
                 xy = [x,y]
@@ -61,18 +65,7 @@ class DemoWheel(QGraphicsItem):
 
         piece = QGraphicsPathItem(path, self)
         piece.setBrush(QBrush(color))
-
-        # arc_path = QPainterPath(QPointF(x1, y1))
-        # arc_path.arcMoveTo(x2, y2, 100, 100, 100)
-        # arc_piece = QGraphicsPathItem(arc_path, self)
-        # arc_piece.setBrush(brush)
-
-        # big_piece = QGraphicsPolygonItem(QPolygonF([
-        #     QPointF(x1, y1),
-        #     QPointF(x2, y2),
-        #     QPointF(self.xc, self.yc)
-        # ]), self)
-        # big_piece.setBrush(brush)
+        piece.setZValue(-1)
     
     def draw_title(self, text, x1, y1, x2, y2):
         tx = (x1+x2)/2

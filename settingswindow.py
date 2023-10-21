@@ -256,7 +256,7 @@ class SettingsWindow(QWidget):
     #remove selected wheel color from the list
     def remove_color(self):
         current_row = self.wheel_bg_color_list.currentRow()
-        if current_row >= 0:
+        if current_row >= 0 and len(self.wheel_colors) > 1:
             self.wheel_colors.remove(self.wheel_colors[current_row])
             self.wheel_colors_update()
     
