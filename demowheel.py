@@ -7,7 +7,7 @@ Made with assistance from https://engineersjourney.wordpress.com/2012/09/05/pyqt
 
 #imports
 from PyQt6.QtWidgets import *
-from PyQt6.QtGui import QBrush, QPen, QPolygonF, QFont
+from PyQt6.QtGui import QBrush, QPen, QPolygonF, QFont, QPainterPath
 from PyQt6.QtCore import QPointF, QObject, pyqtProperty
 import math
 
@@ -18,12 +18,15 @@ class DemoWheel(QGraphicsItem):
         self.xc = xc
         self.yc = yc
         self.settings = settings
+        self.multicolor = self.settings.get_value('Wheel', 'bg_type') == 'Multicolor'
+        self.bg_colors = self.settings.get_section_list('Wheel_Colors')
         diameter = float(settings.get_value('Wheel', 'size'))
-        radius = diameter / 2
-        self.setPos(xc+radius, yc+radius)
+        self.radius = diameter / 2
+        self.setPos(xc+self.radius, yc+self.radius)
         self.adapter = DemoWheelAdapter(self, self)
 
-        wheel = QGraphicsEllipseItem(xc-radius, yc-radius, diameter, diameter, self)
+        wheel = QGraphicsEllipseItem(xc-self.radius, yc-self.radius, diameter, diameter, self)
+        self.wheel_rect = wheel.rect()
 
         brush = QBrush(settings.get_value('Wheel', 'bg_color'))
         wheel.setBrush(brush)
@@ -36,9 +39,12 @@ class DemoWheel(QGraphicsItem):
         self.font.setPointSize(int(settings.get_value('Text', 'font_size')))
         titles = settings.get_section_list('Titles')
         l = len(titles)
+        self.arc_length = 360 / l
         for i in range(l):
-            x = radius * math.cos(2*math.pi*i/l) + xc
-            y = radius * math.sin(2*math.pi*i/l) + yc
+            x = self.radius * math.cos(2*math.pi*i/l) + xc
+            y = self.radius * math.sin(2*math.pi*i/l) + yc
+            if self.multicolor:
+                    self.draw_piece(x, y, self.bg_colors[i%len(self.bg_colors)])
             line = QGraphicsPolygonItem(QPolygonF([QPointF(xc, yc),QPointF(x, y)]), self)
             line.setPen(pen)
             if i == 0:
@@ -49,6 +55,25 @@ class DemoWheel(QGraphicsItem):
                 xy = [x,y]
         self.draw_title(titles[0], xy[0], xy[1], xy1[0], xy1[1])
 
+    def draw_piece(self, x, y, color):
+        path = QPainterPath(QPointF(self.xc, self.yc))
+        path.arcTo(self.wheel_rect, calc_clockwise_angle(x, y, self.xc, self.yc), self.arc_length)
+
+        piece = QGraphicsPathItem(path, self)
+        piece.setBrush(QBrush(color))
+
+        # arc_path = QPainterPath(QPointF(x1, y1))
+        # arc_path.arcMoveTo(x2, y2, 100, 100, 100)
+        # arc_piece = QGraphicsPathItem(arc_path, self)
+        # arc_piece.setBrush(brush)
+
+        # big_piece = QGraphicsPolygonItem(QPolygonF([
+        #     QPointF(x1, y1),
+        #     QPointF(x2, y2),
+        #     QPointF(self.xc, self.yc)
+        # ]), self)
+        # big_piece.setBrush(brush)
+    
     def draw_title(self, text, x1, y1, x2, y2):
         tx = (x1+x2)/2
         ty = (y1+y2)/2

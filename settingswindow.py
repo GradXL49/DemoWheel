@@ -31,6 +31,10 @@ class SettingsWindow(QWidget):
         tab_text = self.init_tab_text()
         tabs.addTab(tab_text, "Text")
 
+        #background tab
+        tab_background = self.init_tab_bg()
+        tabs.addTab(tab_background, "Background")
+
         #layout
         layout = QGridLayout()
         self.setLayout(layout)
@@ -52,9 +56,10 @@ class SettingsWindow(QWidget):
     #opens a color picker dialog for choosing colors
     def get_color(self, category, option):
         color = QColorDialog().getColor(self.settings.get_value(category, option))
-        self.settings.set_value(category, option, color)
-        self.settings.save_config()
-        self.mainwindow.update_settings()
+        if color.isValid():
+            self.settings.set_value(category, option, color)
+            self.settings.save_config()
+            self.mainwindow.update_settings()
     
     #create the text tab
     def init_tab_text(self):
@@ -175,31 +180,51 @@ class SettingsWindow(QWidget):
         wheel_bg_type = QComboBox()
         wheel_bg_type.addItem('Solid')
         wheel_bg_type.addItem('Multicolor')
-        wheel_bg_type.addItem('Image')
+        #wheel_bg_type.addItem('Image')
         wheel_bg_type.setCurrentText(bg_type)
         wheel_bg_type.activated.connect(lambda: self.wheel_bg_type_change())
 
-        '''UNDER CONSTRUCTION'''
-        wheel_colors = self.settings.get_section('Wheel_Colors')
-        wheel_bg_color_list = QListWidget()
-        for i in range(len(wheel_colors)):
-            wheel_bg_color_list.addItem('Color '+str(i))
-        wheel_bg_color_list.setHidden(True)
+        wheel_colors_container = QWidget()
+        wheel_colors_container.setHidden(True)
+
+        self.wheel_colors = self.settings.get_section_list('Wheel_Colors')
+        self.wheel_bg_color_list = QListWidget()
+        i = 0
+        for c in self.wheel_colors:
+            self.wheel_bg_color_list.addItem('Color '+str(i)+': '+str(c.getRgb()))
+            i += 1
+        
+        wheel_colors_add = QPushButton('Add')
+        wheel_colors_add.clicked.connect(lambda: self.add_color())
+
+        wheel_colors_remove = QPushButton('Remove')
+        wheel_colors_remove.clicked.connect(lambda: self.remove_color())
+
+        wheel_colors_up = QPushButton('Up')
+        wheel_colors_up.clicked.connect(lambda: self.move_color_up())
+
+        wheel_colors_down = QPushButton('Down')
+        wheel_colors_down.clicked.connect(lambda: self.move_color_down())
+
+        wheel_colors_layout = QGridLayout()
+        wheel_colors_container.setLayout(wheel_colors_layout)
+        wheel_colors_layout.addWidget(self.wheel_bg_color_list, 0, 0, 4, 1)
+        wheel_colors_layout.addWidget(wheel_colors_add, 0, 1)
+        wheel_colors_layout.addWidget(wheel_colors_remove, 1, 1)
+        wheel_colors_layout.addWidget(wheel_colors_up, 2, 1)
+        wheel_colors_layout.addWidget(wheel_colors_down, 3, 1)
 
         if bg_type == 'Solid':
             wheel_bg_color.setHidden(False)
         elif bg_type == 'Multicolor':
-            wheel_bg_color_list.setHidden(False)
-        else:
-            pass
-        '''****************'''
+            wheel_colors_container.setHidden(False)
         
         self.options['Wheel'] = {
             'size': wheel_size,
             'fg_color': wheel_fg_color,
-            #'bg_type': wheel_bg_type,
+            'bg_type': wheel_bg_type,
             'bg_color': wheel_bg_color,
-            #'bg_color_list': wheel_bg_color_list
+            'bg_color_list': wheel_colors_container
         }
 
         tab_wheel_layout = QVBoxLayout()
@@ -220,5 +245,66 @@ class SettingsWindow(QWidget):
         elif bg_type == 'Multicolor':
             self.options['Wheel']['bg_color'].setHidden(True)
             self.options['Wheel']['bg_color_list'].setHidden(False)
-        else:
-            pass
+    
+    #add a wheel color for the multicolor background
+    def add_color(self):
+        color = QColorDialog().getColor()
+        if color.isValid():
+            self.wheel_colors.append(color)
+            self.wheel_colors_update()
+    
+    #remove selected wheel color from the list
+    def remove_color(self):
+        current_row = self.wheel_bg_color_list.currentRow()
+        if current_row >= 0:
+            self.wheel_colors.remove(self.wheel_colors[current_row])
+            self.wheel_colors_update()
+    
+    #move selected wheel color up in the list
+    def move_color_up(self):
+        current_row = self.wheel_bg_color_list.currentRow()
+        if current_row > 0:
+            temp = self.wheel_colors[current_row]
+            self.wheel_colors[current_row] = self.wheel_colors[current_row-1]
+            self.wheel_colors[current_row-1] = temp
+            self.wheel_colors_update()
+            self.wheel_bg_color_list.setCurrentRow(current_row-1)
+
+    #move selected wheel color down in the list
+    def move_color_down(self):
+        current_row = self.wheel_bg_color_list.currentRow()
+        if current_row >= 0 and current_row < len(self.wheel_colors)-1:
+            temp = self.wheel_colors[current_row]
+            self.wheel_colors[current_row] = self.wheel_colors[current_row+1]
+            self.wheel_colors[current_row+1] = temp
+            self.wheel_colors_update()
+            self.wheel_bg_color_list.setCurrentRow(current_row+1)
+    
+    #update the list and the settings on color list change
+    def wheel_colors_update(self):
+        self.wheel_bg_color_list.clear()
+        i = 0
+        for c in self.wheel_colors:
+            self.wheel_bg_color_list.addItem('Color '+str(i)+': '+str(c.getRgb()))
+            i += 1
+        self.settings.set_section_list('Wheel_Colors', 'color', self.wheel_colors)
+        self.settings.save_config()
+        self.mainwindow.update_settings()
+
+    #create the background tab
+    def init_tab_bg(self):
+        tab_bg = QWidget()
+
+        bg_color = QPushButton("Color")
+        bg_color.clicked.connect(lambda: self.get_color('Background', 'color'))
+
+        self.options['Background'] = {
+            'color': bg_color
+        }
+
+        tab_bg_layout = QVBoxLayout()
+        tab_bg.setLayout(tab_bg_layout)
+        for w in self.options['Background']:
+            tab_bg_layout.addWidget(self.options['Background'][w])
+        
+        return tab_bg
