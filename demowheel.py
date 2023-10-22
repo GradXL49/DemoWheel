@@ -59,17 +59,21 @@ class DemoWheel(QGraphicsItem):
         self.draw_title(titles[0], xy[0], xy[1], xy1[0], xy1[1])
 
     def draw_piece(self, x, y, color):
+        #make a painter path that draws an arc within the bounds of the wheel from the center to the given point then clockwise for the arc length
         path = QPainterPath(QPointF(self.xc, self.yc))
-        path.arcTo(self.wheel_rect, calc_clockwise_angle(x, y, self.xc, self.yc), self.arc_length)
+        path.arcTo(self.wheel_rect, calc_clockwise_angle(self.xc, self.yc, x, y), self.arc_length)
 
+        #use the painter path to create a unique graphics item shape
         piece = QGraphicsPathItem(path, self)
         piece.setBrush(QBrush(color))
         piece.setZValue(-1)
     
     def draw_title(self, text, x1, y1, x2, y2):
+        #get the point directly center of the two incoming points
         tx = (x1+x2)/2
         ty = (y1+y2)/2
         
+        #treat the line between those points as a right triangle to find an offset point on that line
         if x1 == x2:
             theta = math.atan(0)
         else:
@@ -80,14 +84,16 @@ class DemoWheel(QGraphicsItem):
         off_x = offset * math.cos(theta)
         off_y = offset * math.sin(theta)
 
+        #creat the text and place at calculated point
         title = QGraphicsTextItem(text, self)
         title.setPos(tx+off_x, ty+off_y)
-        angle = calc_clockwise_angle(tx, ty, self.xc, self.yc)
+        angle = calc_clockwise_angle(tx, ty, self.xc, self.yc) #rotate towards the center of the wheel
         title.setRotation(angle)
         title.setFont(self.font)
         title.setDefaultTextColor(self.settings.get_value('Text', 'text_color'))
         title.setZValue(1)
 
+        #optionally display a shadow inline and slightly below the original text
         if self.settings.get_value('Text', 'shadow_bool'):
             offset = offset * 0.9
             off_x = offset * math.cos(theta)
