@@ -48,7 +48,6 @@ class DemoWheel(QGraphicsItem):
             if self.multicolor:
                 self.draw_piece(x, y, self.bg_colors[i%len(self.bg_colors)])
             else:
-                print('got here')
                 line = QGraphicsPolygonItem(QPolygonF([QPointF(xc, yc),QPointF(x, y)]), self)
                 line.setPen(self.pen)
             if i == 0:
@@ -71,7 +70,10 @@ class DemoWheel(QGraphicsItem):
         tx = (x1+x2)/2
         ty = (y1+y2)/2
         
-        theta = math.atan((y2-y1)/(x2-x1))
+        if x1 == x2:
+            theta = math.atan(0)
+        else:
+            theta = math.atan((y2-y1)/(x2-x1))
         offset = self.font.pointSize()*16/12 #convert point size to pixels
         if ty > self.yc:
             offset = -offset

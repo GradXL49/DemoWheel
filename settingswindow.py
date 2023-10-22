@@ -129,7 +129,7 @@ class SettingsWindow(QWidget):
     #remove selected title from the list
     def remove_title(self):
         current_row = self.text_titles_list.currentRow()
-        if current_row >= 0:
+        if current_row >= 0 and len(self.text_titles) > 1:
             self.text_titles.remove(self.text_titles[current_row])
             self.title_list_update()
     
