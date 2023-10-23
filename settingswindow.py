@@ -1,8 +1,8 @@
-"""
+'''
 Grady Landers
 Demo Wheel - settingswindow.py
 Code for the window that contains the settings for the main window.
-"""
+'''
 
 #imports
 from PyQt6.QtWidgets import *
@@ -16,24 +16,24 @@ class SettingsWindow(QWidget):
         self.options = {}
 
         #gui elements
-        self.setWindowTitle("Settings")
+        self.setWindowTitle('Settings')
         self.setFixedSize(400, 400)
         tabs = QTabWidget()
         #tabs.setTabPosition(QTabWidget.TabPosition.West)
-        btn_submit = QPushButton("Apply")
+        btn_submit = QPushButton('Apply')
         btn_submit.clicked.connect(lambda: self.submit())
 
         #Wheel tab
         tab_wheel = self.init_tab_wheel()
-        tabs.addTab(tab_wheel, "Wheel")
+        tabs.addTab(tab_wheel, 'Wheel')
 
         #Text tab
         tab_text = self.init_tab_text()
-        tabs.addTab(tab_text, "Text")
+        tabs.addTab(tab_text, 'Text')
 
         #background tab
         tab_background = self.init_tab_bg()
-        tabs.addTab(tab_background, "Background")
+        tabs.addTab(tab_background, 'Scene')
 
         #layout
         layout = QGridLayout()
@@ -47,7 +47,7 @@ class SettingsWindow(QWidget):
             for option in self.options[category]:
                 if 'bool' in option:
                     self.settings.set_value(category, option, self.options[category][option].isChecked())
-                elif 'color' not in option and 'type' not in option and 'list' not in option:
+                elif 'color' not in option and 'type' not in option and 'list' not in option and 'image' not in option:
                     self.settings.set_value(category, option, self.options[category][option].value())
         
         self.settings.save_config()
@@ -69,13 +69,13 @@ class SettingsWindow(QWidget):
         text_size.setRange(1, 100)
         text_size.setValue(float(self.settings.get_value('Text', 'font_size')))
 
-        text_color = QPushButton("Text Color")
+        text_color = QPushButton('Text Color')
         text_color.clicked.connect(lambda: self.get_color('Text', 'text_color'))
 
-        text_shadow = QCheckBox("Shadow")
+        text_shadow = QCheckBox('Shadow')
         text_shadow.setChecked(self.settings.get_value('Text', 'shadow_bool'))
 
-        text_shadow_color = QPushButton("Shadow Color")
+        text_shadow_color = QPushButton('Shadow Color')
         text_shadow_color.clicked.connect(lambda: self.get_color('Text', 'shadow_color'))
 
         self.options['Text'] = {
@@ -169,11 +169,11 @@ class SettingsWindow(QWidget):
         wheel_size.setRange(100, 1000)
         wheel_size.setValue(float(self.settings.get_value('Wheel', 'size')))
         
-        wheel_bg_color = QPushButton("Background Color")
+        wheel_bg_color = QPushButton('Background Color')
         wheel_bg_color.clicked.connect(lambda: self.get_color('Wheel', 'bg_color'))
         wheel_bg_color.setHidden(True)
 
-        wheel_fg_color = QPushButton("Line Color")
+        wheel_fg_color = QPushButton('Line Color')
         wheel_fg_color.clicked.connect(lambda: self.get_color('Wheel', 'fg_color'))
 
         bg_type = self.settings.get_value('Wheel', 'bg_type')
@@ -295,16 +295,75 @@ class SettingsWindow(QWidget):
     def init_tab_bg(self):
         tab_bg = QWidget()
 
-        bg_color = QPushButton("Color")
+        current_bg_type = self.settings.get_value('Background', 'type')
+        bg_type = QComboBox()
+        bg_type.addItem('Solid')
+        bg_type.addItem('Image')
+        bg_type.setCurrentText(current_bg_type)
+        bg_type.activated.connect(lambda: self.bg_type_change())
+
+        bg_color = QPushButton('Background Color')
         bg_color.clicked.connect(lambda: self.get_color('Background', 'color'))
+        bg_color.setHidden(True)
+
+        bg_image = QPushButton('Background Image')
+        bg_image.setHidden(True)
+
+        if current_bg_type == 'Solid':
+            bg_color.setHidden(False)
+        elif current_bg_type == 'Image':
+            bg_image.setHidden(False)
 
         self.options['Background'] = {
-            'color': bg_color
+            'type': bg_type,
+            'color': bg_color,
+            'image': bg_image
+        }
+
+        button_color = QPushButton('Button Color')
+        button_color.clicked.connect(lambda: self.get_color('Button', 'bg_color'))
+
+        button_text = QPushButton('Button Text')
+        button_text.clicked.connect(lambda: self.get_color('Button', 'fg_color'))
+
+        button_hover_color = QPushButton('Hover Color')
+        button_hover_color.clicked.connect(lambda: self.get_color('Button', 'bg_hover_color'))
+
+        button_hover_text = QPushButton('Hover Text')
+        button_hover_text.clicked.connect(lambda: self.get_color('Button', 'fg_hover_color'))
+
+        button_disable_color = QPushButton('Disabled Color')
+        button_disable_color.clicked.connect(lambda: self.get_color('Button', 'bg_disable_color'))
+
+        button_disable_text = QPushButton('Disabled Text')
+        button_disable_text.clicked.connect(lambda: self.get_color('Button', 'fg_disable_color'))
+
+        self.options['Button'] = {
+            'bg_color': button_color,
+            'fg_color': button_text,
+            'bg_hover_color': button_hover_color,
+            'fg_hover_color': button_hover_text,
+            'bg_disable_color': button_disable_color,
+            'fg_disable_color': button_disable_text
         }
 
         tab_bg_layout = QVBoxLayout()
         tab_bg.setLayout(tab_bg_layout)
         for w in self.options['Background']:
             tab_bg_layout.addWidget(self.options['Background'][w])
+        for w in self.options['Button']:
+            tab_bg_layout.addWidget(self.options['Button'][w])
         
         return tab_bg
+    
+    #handle change of background type
+    def bg_type_change(self):
+        current = self.options['Background']['type'].currentText()
+        self.settings.set_value('Background', 'type', current)
+
+        if current == 'Solid':
+            self.options['Background']['color'].setHidden(False)
+            self.options['Background']['image'].setHidden(True)
+        elif current == 'Image':
+            self.options['Background']['image'].setHidden(False)
+            self.options['Background']['color'].setHidden(True)

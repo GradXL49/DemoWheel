@@ -1,8 +1,8 @@
-"""
+'''
 Grady Landers
 Demo Wheel - settings.py
 Class to contain and verify all of the user settings.
-"""
+'''
 
 #imports
 import configparser
@@ -15,38 +15,47 @@ class Settings():
         #if the file doesn't exist, create it first with defaults
         if not os.path.isfile('settings.ini'):
             self.config['Wheel'] = {
-                'size': '800',
-                'bg_color': '255,100,0,255',
+                'size': '700',
+                'bg_color': '224,98,54,255',
                 'fg_color': '0,0,0,255',
-                'bg_type': 'Solid'
+                'bg_type': 'Multicolor'
             }
             self.config['Wheel_Colors'] = {
-                'bg_color_0': '255,0,0,255',
-                'bg_color_1': '0,255,0,255',
-                'bg_color_2': '0,0,255,255'
+                'color0': '199,33,56,255',
+                'color1': '224,98,54,255',
+                'color2': '215,166,75,255',
+                'color3': '48,76,122,255'
             }
             self.config['Text'] = {
                 'font_size': '15',
-                'text_color': '0,0,0,255',
-                'shadow_bool': 'False',
-                'shadow_color': '255,255,255,255'
+                'text_color': '244,245,247,255',
+                'shadow_bool': 'True',
+                'shadow_color': '0,0,0,255'
             }
             self.config['Titles'] = {
-                'title_0': "Tony Hawk Pro Skater 2",
-                'title_1': "Star Wars: The Force Unleashed",
-                'title_2': "Borderlands",
-                'title_3': "Toe Jam and Earl",
-                'title_4': "Serious Sam",
-                'title_5': "PC Building Simulator",
-                'title_6': "Avatar",
-                'title_7': "Brothers in Arms",
-                'title_8': "LOTR Online",
-                'title_9': "Mario Kart"
+                'title_0': 'Tony Hawk Pro Skater 2',
+                'title_1': 'Star Wars: The Force Unleashed',
+                'title_2': 'Borderlands',
+                'title_3': 'Toe Jam and Earl',
+                'title_4': 'Serious Sam',
+                'title_5': 'PC Building Simulator',
+                'title_6': 'Avatar',
+                'title_7': 'Brothers in Arms',
+                'title_8': 'Starfield',
+                'title_9': 'Mario Kart'
             }
             self.config['Background'] = {
-                'type': 'Image',
+                'type': 'Solid',
                 'color': '60,60,60,255',
                 'image': 'images/wave.jpg'
+            }
+            self.config['Button'] = {
+                'bg_color': '224,98,54,255',
+                'fg_color': '244,245,247,255',
+                'bg_hover_color': '48,76,122,255',
+                'fg_hover_color': '215,166,75,255',
+                'bg_disable_color': '215,166,75,255',
+                'fg_disable_color': '0,0,0,255'
             }
             self.save_config()
         

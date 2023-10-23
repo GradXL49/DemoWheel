@@ -7,13 +7,14 @@ Code for the window that will be displayed at runtime and contain the titular De
 #imports
 import random
 from PyQt6.QtWidgets import *
-from PyQt6.QtGui import QBrush, QPainter, QPen, QPolygonF, QPixmap
-from PyQt6.QtCore import Qt, QPointF, QPropertyAnimation, QEasingCurve
+from PyQt6.QtGui import QBrush, QPainter, QPen, QPolygonF, QPixmap, QAction, QFont
+from PyQt6.QtCore import QPointF, QPropertyAnimation, QEasingCurve, QRectF
 from settingswindow import SettingsWindow
 from demowheel import DemoWheel
+from custombutton import CustomButton
 from settings import Settings
 
-class MainWindow(QWidget):
+class MainWindow(QMainWindow):
     def __init__(self):
         #initialization
         super().__init__()
@@ -21,10 +22,16 @@ class MainWindow(QWidget):
         self.settings_window = SettingsWindow(self, self.settings)
         self.spinning = False
 
+        #setting in toolbar
+        toolbar = QToolBar('toolbar')
+        self.addToolBar(toolbar)
+
+        settings_action = QAction('Settings', self)
+        settings_action.triggered.connect(lambda: self.open_settings())
+        toolbar.addAction(settings_action)
+
         #gui elements
         self.setWindowTitle("Funhaus Demo Wheel")
-        btn_settings = QPushButton("Settings")
-        btn_settings.clicked.connect(lambda: self.open_settings())
         btn_spin = QPushButton("SPIN")
         btn_spin.clicked.connect(lambda: self.spin())
         self.draw_scene()
@@ -32,12 +39,7 @@ class MainWindow(QWidget):
         self.canvas_view.setRenderHint(QPainter.RenderHint.Antialiasing)
         self.canvas_view.setRenderHint(QPainter.RenderHint.TextAntialiasing)
 
-        layout = QGridLayout()
-        self.setLayout(layout)
-
-        layout.addWidget(btn_settings, 0, 0)
-        layout.addWidget(self.canvas_view, 1, 0)
-        layout.addWidget(btn_spin, 2, 0)
+        self.setCentralWidget(self.canvas_view)
 
     #opens the settings
     def open_settings(self):
@@ -54,6 +56,7 @@ class MainWindow(QWidget):
     #switches the status of spinning flag
     def toggle_spinning(self):
         self.spinning = not self.spinning
+        self.button.toggle_hover_events()
 
     #signal that settings have been changed and a refresh is necessary
     def update_settings(self):
@@ -64,6 +67,8 @@ class MainWindow(QWidget):
         self.canvas = QGraphicsScene()
         self.wheel = DemoWheel(0, 0, self.settings)
         self.canvas.addItem(self.wheel)
+        self.button = CustomButton(self.settings, self.spin)
+        self.canvas.addItem(self.button)
         self.canvas.addItem(self.draw_pointer())
         if self.settings.get_value('Background', 'type') == 'Solid':
             self.canvas.setBackgroundBrush(QBrush(self.settings.get_value('Background', 'color')))

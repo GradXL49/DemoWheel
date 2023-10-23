@@ -66,6 +66,7 @@ class DemoWheel(QGraphicsItem):
         #use the painter path to create a unique graphics item shape
         piece = QGraphicsPathItem(path, self)
         piece.setBrush(QBrush(color))
+        piece.setPen(QPen(color))
         piece.setZValue(-1)
     
     def draw_title(self, text, x1, y1, x2, y2):
