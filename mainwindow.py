@@ -7,8 +7,8 @@ Code for the window that will be displayed at runtime and contain the titular De
 #imports
 import random
 from PyQt6.QtWidgets import *
-from PyQt6.QtGui import QBrush, QPainter, QPen, QPolygonF, QPixmap, QAction, QFont
-from PyQt6.QtCore import QPointF, QPropertyAnimation, QEasingCurve, QRectF
+from PyQt6.QtGui import QBrush, QPainter, QPen, QPolygonF, QAction
+from PyQt6.QtCore import QPointF, QPropertyAnimation, QEasingCurve
 from settingswindow import SettingsWindow
 from demowheel import DemoWheel
 from custombutton import CustomButton
@@ -36,6 +36,8 @@ class MainWindow(QMainWindow):
         btn_spin.clicked.connect(lambda: self.spin())
         self.draw_scene()
         self.canvas_view = QGraphicsView(self.canvas)
+        if self.settings.get_value('Background', 'type') == 'Image':
+            self.canvas_view.setStyleSheet("border-image: url('"+self.settings.get_value('Background', 'image')+"') 0 0 0 0 stretch stretch")
         self.canvas_view.setRenderHint(QPainter.RenderHint.Antialiasing)
         self.canvas_view.setRenderHint(QPainter.RenderHint.TextAntialiasing)
 
@@ -62,6 +64,8 @@ class MainWindow(QMainWindow):
     def update_settings(self):
         self.draw_scene()
         self.canvas_view.setScene(self.canvas)
+        if self.settings.get_value('Background', 'type') == 'Image':
+            self.canvas_view.setStyleSheet("border-image: url('"+self.settings.get_value('Background', 'image')+"') 0 0 0 0 stretch stretch")
 
     def draw_scene(self):
         self.canvas = QGraphicsScene()
@@ -72,12 +76,6 @@ class MainWindow(QMainWindow):
         self.canvas.addItem(self.draw_pointer())
         if self.settings.get_value('Background', 'type') == 'Solid':
             self.canvas.setBackgroundBrush(QBrush(self.settings.get_value('Background', 'color')))
-        elif self.settings.get_value('Background', 'type') == 'Image':
-            #this doesn't work for some reason
-            print('got here')
-            image = QPixmap(self.settings.get_value('Background', 'image'))
-            pixmap = self.canvas.addPixmap(image)
-            pixmap.setPos(0, 0)
 
         #animation
         self.spin_anim = QPropertyAnimation(self.wheel.adapter, b'rotation')

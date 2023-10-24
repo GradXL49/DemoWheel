@@ -8,10 +8,12 @@ This is the main file that initializes and runs the app.
 #imports
 from PyQt6.QtWidgets import QApplication
 from mainwindow import MainWindow
+import qdarktheme
 import sys
 
 #start PyQt application
 app = QApplication([])
+qdarktheme.setup_theme()
 
 #initialize the main window
 mw = MainWindow()
