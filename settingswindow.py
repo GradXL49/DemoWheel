@@ -6,6 +6,7 @@ Code for the window that contains the settings for the main window.
 
 #imports
 from PyQt6.QtWidgets import *
+from settingwidget import SettingWidget
 
 class SettingsWindow(QWidget):
     def __init__(self, mainwindow, settings):
@@ -17,11 +18,8 @@ class SettingsWindow(QWidget):
 
         #gui elements
         self.setWindowTitle('Settings')
-        self.setFixedSize(400, 400)
+        self.setFixedSize(400, 450)
         tabs = QTabWidget()
-        #tabs.setTabPosition(QTabWidget.TabPosition.West)
-        btn_submit = QPushButton('Apply')
-        btn_submit.clicked.connect(lambda: self.submit())
 
         #Wheel tab
         tab_wheel = self.init_tab_wheel()
@@ -29,29 +27,26 @@ class SettingsWindow(QWidget):
 
         #Text tab
         tab_text = self.init_tab_text()
-        tabs.addTab(tab_text, 'Text')
+        tabs.addTab(tab_text, 'Titles')
 
         #background tab
         tab_background = self.init_tab_bg()
         tabs.addTab(tab_background, 'Scene')
 
         #layout
-        layout = QGridLayout()
+        layout = QVBoxLayout()
         self.setLayout(layout)
-        layout.addWidget(tabs, 0, 0)
-        layout.addWidget(btn_submit, 1, 0)
-
-    #action for APPLY button
-    def submit(self):
-        for category in self.options:
-            for option in self.options[category]:
-                if 'bool' in option:
-                    self.settings.set_value(category, option, self.options[category][option].isChecked())
-                elif 'color' not in option and 'type' not in option and 'list' not in option and 'image' not in option:
-                    self.settings.set_value(category, option, self.options[category][option].value())
-        
-        self.settings.save_config()
-        self.mainwindow.update_settings()
+        layout.addWidget(tabs)
+    
+    #when a control value is changed update the settings
+    def change_value(self, category, option):
+        value = self.options[category][option].get_value()
+        if value is None:
+            print('ERROR: Invalid value.')
+        else:
+            self.settings.set_value(category, option, value)
+            self.settings.save_config()
+            self.mainwindow.update_settings()
     
     #opens a color picker dialog for choosing colors
     def get_color(self, category, option):
@@ -60,23 +55,24 @@ class SettingsWindow(QWidget):
             self.settings.set_value(category, option, color)
             self.settings.save_config()
             self.mainwindow.update_settings()
+            self.options[category][option].get_control().setStyleSheet('background-color: rgba'+str(color.getRgb()))
     
     #create the text tab
     def init_tab_text(self):
         tab_text = QWidget()
 
-        text_size = QSpinBox()
-        text_size.setRange(1, 100)
-        text_size.setValue(float(self.settings.get_value('Text', 'font_size')))
+        text_size = SettingWidget('Text Size', float(self.settings.get_value('Text', 'font_size')))
+        text_size.get_control().setRange(1, 100)
+        text_size.get_control().valueChanged.connect(lambda: self.change_value('Text', 'font_size'))
 
-        text_color = QPushButton('Text Color')
-        text_color.clicked.connect(lambda: self.get_color('Text', 'text_color'))
+        text_color = SettingWidget('Text Color', self.settings.get_value('Text', 'text_color'))
+        text_color.get_control().clicked.connect(lambda: self.get_color('Text', 'text_color'))
 
-        text_shadow = QCheckBox('Shadow')
-        text_shadow.setChecked(self.settings.get_value('Text', 'shadow_bool'))
+        text_shadow = SettingWidget('Shadow', self.settings.get_value('Text', 'shadow_bool'))
+        text_shadow.get_control().stateChanged.connect(lambda: self.change_value('Text', 'shadow_bool'))
 
-        text_shadow_color = QPushButton('Shadow Color')
-        text_shadow_color.clicked.connect(lambda: self.get_color('Text', 'shadow_color'))
+        text_shadow_color = SettingWidget('Shadow Color', self.settings.get_value('Text', 'shadow_color'))
+        text_shadow_color.get_control().clicked.connect(lambda: self.get_color('Text', 'shadow_color'))
 
         self.options['Text'] = {
             'font_size': text_size,
@@ -165,27 +161,30 @@ class SettingsWindow(QWidget):
     def init_tab_wheel(self):
         tab_wheel = QWidget()
 
-        wheel_size = QDoubleSpinBox()
-        wheel_size.setRange(100, 1000)
-        wheel_size.setValue(float(self.settings.get_value('Wheel', 'size')))
+        wheel_size = SettingWidget('Wheel Size', 0.0)
+        wheel_size.get_control().setRange(100, 1000)
+        wheel_size.get_control().setValue(float(self.settings.get_value('Wheel', 'size')))
+        wheel_size.get_control().valueChanged.connect(lambda: self.change_value('Wheel', 'size'))
         
-        wheel_bg_color = QPushButton('Background Color')
-        wheel_bg_color.clicked.connect(lambda: self.get_color('Wheel', 'bg_color'))
+        wheel_bg_color = SettingWidget('Background Color', self.settings.get_value('Wheel', 'bg_color'))
+        wheel_bg_color.get_control().clicked.connect(lambda: self.get_color('Wheel', 'bg_color'))
         wheel_bg_color.setHidden(True)
 
-        wheel_fg_color = QPushButton('Line Color')
-        wheel_fg_color.clicked.connect(lambda: self.get_color('Wheel', 'fg_color'))
+        wheel_fg_color = SettingWidget('Line Color', self.settings.get_value('Wheel', 'fg_color'))
+        wheel_fg_color.get_control().clicked.connect(lambda: self.get_color('Wheel', 'fg_color'))
+        wheel_fg_color.setHidden(True)
 
         bg_type = self.settings.get_value('Wheel', 'bg_type')
-        wheel_bg_type = QComboBox()
-        wheel_bg_type.addItem('Solid')
-        wheel_bg_type.addItem('Multicolor')
-        #wheel_bg_type.addItem('Image')
-        wheel_bg_type.setCurrentText(bg_type)
-        wheel_bg_type.activated.connect(lambda: self.wheel_bg_type_change())
+        wheel_bg_type = SettingWidget('Background Type', bg_type)
+        wheel_bg_type.get_control().addItem('Solid')
+        wheel_bg_type.get_control().addItem('Multicolor')
+        wheel_bg_type.get_control().setCurrentText(bg_type)
+        wheel_bg_type.get_control().activated.connect(lambda: self.wheel_bg_type_change())
 
         wheel_colors_container = QWidget()
         wheel_colors_container.setHidden(True)
+
+        label_colors = QLabel('Colors:')
 
         self.wheel_colors = self.settings.get_section_list('Wheel_Colors')
         self.wheel_bg_color_list = QListWidget()
@@ -208,22 +207,24 @@ class SettingsWindow(QWidget):
 
         wheel_colors_layout = QGridLayout()
         wheel_colors_container.setLayout(wheel_colors_layout)
-        wheel_colors_layout.addWidget(self.wheel_bg_color_list, 0, 0, 4, 1)
-        wheel_colors_layout.addWidget(wheel_colors_add, 0, 1)
-        wheel_colors_layout.addWidget(wheel_colors_remove, 1, 1)
-        wheel_colors_layout.addWidget(wheel_colors_up, 2, 1)
-        wheel_colors_layout.addWidget(wheel_colors_down, 3, 1)
+        wheel_colors_layout.addWidget(label_colors, 0, 0)
+        wheel_colors_layout.addWidget(self.wheel_bg_color_list, 1, 0, 4, 1)
+        wheel_colors_layout.addWidget(wheel_colors_add, 1, 1)
+        wheel_colors_layout.addWidget(wheel_colors_remove, 2, 1)
+        wheel_colors_layout.addWidget(wheel_colors_up, 3, 1)
+        wheel_colors_layout.addWidget(wheel_colors_down, 4, 1)
 
         if bg_type == 'Solid':
             wheel_bg_color.setHidden(False)
+            wheel_fg_color.setHidden(False)
         elif bg_type == 'Multicolor':
             wheel_colors_container.setHidden(False)
         
         self.options['Wheel'] = {
             'size': wheel_size,
-            'fg_color': wheel_fg_color,
             'bg_type': wheel_bg_type,
             'bg_color': wheel_bg_color,
+            'fg_color': wheel_fg_color,
             'bg_color_list': wheel_colors_container
         }
 
@@ -236,15 +237,20 @@ class SettingsWindow(QWidget):
     
     #handle dynamic settings for wheel bg type
     def wheel_bg_type_change(self):
-        bg_type = self.options['Wheel']['bg_type'].currentText()
+        bg_type = self.options['Wheel']['bg_type'].get_control().currentText()
         self.settings.set_value('Wheel', 'bg_type', bg_type)
 
         if bg_type == 'Solid':
             self.options['Wheel']['bg_color'].setHidden(False)
+            self.options['Wheel']['fg_color'].setHidden(False)
             self.options['Wheel']['bg_color_list'].setHidden(True)
         elif bg_type == 'Multicolor':
             self.options['Wheel']['bg_color'].setHidden(True)
+            self.options['Wheel']['fg_color'].setHidden(True)
             self.options['Wheel']['bg_color_list'].setHidden(False)
+        
+        self.settings.save_config()
+        self.mainwindow.update_settings()
     
     #add a wheel color for the multicolor background
     def add_color(self):
@@ -296,17 +302,18 @@ class SettingsWindow(QWidget):
         tab_bg = QWidget()
 
         current_bg_type = self.settings.get_value('Background', 'type')
-        bg_type = QComboBox()
-        bg_type.addItem('Solid')
-        bg_type.addItem('Image')
-        bg_type.setCurrentText(current_bg_type)
-        bg_type.activated.connect(lambda: self.bg_type_change())
+        bg_type = SettingWidget('Background Type', current_bg_type)
+        bg_type.get_control().addItem('Solid')
+        bg_type.get_control().addItem('Image')
+        bg_type.get_control().setCurrentText(current_bg_type)
+        bg_type.get_control().activated.connect(lambda: self.bg_type_change())
 
-        bg_color = QPushButton('Background Color')
-        bg_color.clicked.connect(lambda: self.get_color('Background', 'color'))
+        bg_color = SettingWidget('Background Color', self.settings.get_value('Background', 'color'))
+        bg_color.get_control().clicked.connect(lambda: self.get_color('Background', 'color'))
         bg_color.setHidden(True)
 
-        bg_image = QPushButton('Background Image')
+        bg_image = SettingWidget('Background Image', 'FILEPATH')
+        bg_image.get_control().clicked.connect(lambda: self.get_image())
         bg_image.setHidden(True)
 
         if current_bg_type == 'Solid':
@@ -320,23 +327,23 @@ class SettingsWindow(QWidget):
             'image': bg_image
         }
 
-        button_color = QPushButton('Button Color')
-        button_color.clicked.connect(lambda: self.get_color('Button', 'bg_color'))
+        button_color = SettingWidget('Button Color', self.settings.get_value('Button', 'bg_color'))
+        button_color.get_control().clicked.connect(lambda: self.get_color('Button', 'bg_color'))
 
-        button_text = QPushButton('Button Text')
-        button_text.clicked.connect(lambda: self.get_color('Button', 'fg_color'))
+        button_text = SettingWidget('Button Text Color', self.settings.get_value('Button', 'fg_color'))
+        button_text.get_control().clicked.connect(lambda: self.get_color('Button', 'fg_color'))
 
-        button_hover_color = QPushButton('Hover Color')
-        button_hover_color.clicked.connect(lambda: self.get_color('Button', 'bg_hover_color'))
+        button_hover_color = SettingWidget('Hover Color', self.settings.get_value('Button', 'bg_hover_color'))
+        button_hover_color.get_control().clicked.connect(lambda: self.get_color('Button', 'bg_hover_color'))
 
-        button_hover_text = QPushButton('Hover Text')
-        button_hover_text.clicked.connect(lambda: self.get_color('Button', 'fg_hover_color'))
+        button_hover_text = SettingWidget('Hover Text Color', self.settings.get_value('Button', 'fg_hover_color'))
+        button_hover_text.get_control().clicked.connect(lambda: self.get_color('Button', 'fg_hover_color'))
 
-        button_disable_color = QPushButton('Disabled Color')
-        button_disable_color.clicked.connect(lambda: self.get_color('Button', 'bg_disable_color'))
+        button_disable_color = SettingWidget('Disabled Color', self.settings.get_value('Button', 'bg_disable_color'))
+        button_disable_color.get_control().clicked.connect(lambda: self.get_color('Button', 'bg_disable_color'))
 
-        button_disable_text = QPushButton('Disabled Text')
-        button_disable_text.clicked.connect(lambda: self.get_color('Button', 'fg_disable_color'))
+        button_disable_text = SettingWidget('Disabled Text Color', self.settings.get_value('Button', 'fg_disable_color'))
+        button_disable_text.get_control().clicked.connect(lambda: self.get_color('Button', 'fg_disable_color'))
 
         self.options['Button'] = {
             'bg_color': button_color,
@@ -358,7 +365,7 @@ class SettingsWindow(QWidget):
     
     #handle change of background type
     def bg_type_change(self):
-        current = self.options['Background']['type'].currentText()
+        current = self.options['Background']['type'].get_control().currentText()
         self.settings.set_value('Background', 'type', current)
 
         if current == 'Solid':
@@ -367,3 +374,18 @@ class SettingsWindow(QWidget):
         elif current == 'Image':
             self.options['Background']['image'].setHidden(False)
             self.options['Background']['color'].setHidden(True)
+        
+        self.settings.save_config()
+        self.mainwindow.update_settings()
+    
+    #find an image to use as the background
+    def get_image(self):
+        dialog = QFileDialog(self)
+        dialog.setFileMode(QFileDialog.FileMode.ExistingFiles)
+        dialog.setNameFilter("Images (*.png *.jpg)")
+        dialog.setDirectory(self.settings.get_value('Background', 'image'))
+        if dialog.exec():
+            image = dialog.selectedFiles()
+            self.settings.set_value('Background', 'image', image[0])
+            self.settings.save_config()
+            self.mainwindow.update_settings()
