@@ -62,6 +62,10 @@ class Settings():
         #read the settings file and hold the configuration
         self.config.read('settings.ini')
 
+        #get available themes
+        self.themes = []
+        self.load_themes()
+
     #save the current configuration to the settings file
     def save_config(self):
         with open('settings.ini', 'w') as configfile:
@@ -102,3 +106,109 @@ class Settings():
         self.config[section] = {}
         for i in range(len(values)):
             self.set_value(section, setting+str(i), values[i])
+    
+    #load all the available themes
+    def load_themes(self):
+        files = os.scandir('./themes')
+        for entry in files:
+            if entry.is_file() and entry.name.endswith('.ini'):
+                theme_config = configparser.ConfigParser()
+                theme_config.read(entry.path)
+                self.themes.append(theme_config)
+    
+    #get list of themes
+    def get_theme_list(self):
+        theme_list = []
+        for theme in self.themes:
+            theme_list.append(theme['Theme']['title'])
+        return theme_list
+
+    def save_theme(self, title):
+        #generate new config to capture settings, add Theme section
+        theme_config = configparser.ConfigParser()
+        theme_config['Theme'] = {'title': title}
+        filename = title.lower().replace(' ', '_')
+
+        #copy current config into theme config
+        for section in self.config:
+            theme_config[section] = {}
+            for setting in self.config[section]:
+                theme_config.set(section, setting, self.config[section][setting])
+        
+        #if there is an image file, copy it to the local image folder
+        image = theme_config['Background']['image']
+        if theme_config['Background']['type'] != 'Image' or image != '':
+            ext = image.split('.')
+            ext = ext[len(ext)-1]
+            os.system('copy '+image.replace('/', '\\')+' images\\'+filename+'.'+ext)
+            theme_config['Background']['image'] = 'images/'+filename+'.'+ext
+        
+        #save the new config as an ini file
+        with open('./themes/'+filename+'.ini', 'w') as configfile:
+            theme_config.write(configfile)
+        
+        self.themes.append(theme_config)
+
+    #set current config to chosen theme
+    def apply_theme(self, index):
+        self.config = self.themes[index]
+    
+    #change the title of an existing theme
+    def rename_theme(self, index, title):
+        #update the title in the theme's config and generate new filename
+        theme_config = self.themes[index]
+        current_filename = theme_config['Theme']['title'].lower().replace(' ', '_')
+        theme_config['Theme'] = {'title': title}
+        filename = title.lower().replace(' ', '_')
+
+        #if there is an image file, rename it in the local image folder
+        image = theme_config['Background']['image']
+        if image != '':
+            ext = image.split('.')
+            ext = ext[len(ext)-1]
+            os.rename(image, 'images/'+filename+'.'+ext)
+            theme_config['Background']['image'] = 'images/'+filename+'.'+ext
+
+        #delete old file and save new one
+        os.remove('./themes/'+current_filename+'.ini')
+        with open('./themes/'+filename+'.ini', 'w') as configfile:
+            theme_config.write(configfile)
+    
+    #duplicate a theme
+    def duplicate_theme(self, index):
+        #generate new config to capture settings, rename
+        theme_config = configparser.ConfigParser()
+        title = self.themes[index]['Theme']['title'] + ' Copy'
+        theme_config['Theme'] = {'title': title}
+        filename = title.lower().replace(' ', '_')
+
+        #copy theme config into new config
+        for section in self.themes[index]:
+            if section != 'Theme':
+                theme_config[section] = {}
+                for setting in self.themes[index][section]:
+                    theme_config.set(section, setting, self.themes[index][section][setting])
+
+        #if there is an image file, copy it to the local image folder
+        image = theme_config['Background']['image']
+        cwd = os.getcwd()
+        if theme_config['Background']['type'] != 'Image' or image != '':
+            ext = image.split('.')
+            ext = ext[len(ext)-1]
+            os.system('copy '+image.replace('/', '\\')+' images\\'+filename+'.'+ext)
+            theme_config['Background']['image'] = 'images/'+filename+'.'+ext
+        
+        #save the new config as an ini file
+        with open('./themes/'+filename+'.ini', 'w') as configfile:
+            theme_config.write(configfile)
+        
+        self.themes.append(theme_config)
+    
+    #delete a theme
+    def delete_theme(self, index):
+        filename = self.themes[index]['Theme']['title'].lower().replace(' ', '_')
+        image = self.themes[index]['Background']['image']
+        self.themes.remove(self.themes[index])
+        os.remove('./themes/'+filename+'.ini')
+        if image != '':
+            os.remove(image)

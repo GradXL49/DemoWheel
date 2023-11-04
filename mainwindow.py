@@ -66,6 +66,8 @@ class MainWindow(QMainWindow):
         self.canvas_view.setScene(self.canvas)
         if self.settings.get_value('Background', 'type') == 'Image':
             self.canvas_view.setStyleSheet("border-image: url('"+self.settings.get_value('Background', 'image')+"') 0 0 0 0 stretch stretch")
+        else:
+            self.canvas_view.setStyleSheet("border-image: none")
 
     def draw_scene(self):
         self.canvas = QGraphicsScene()

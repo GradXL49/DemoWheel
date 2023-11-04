@@ -33,6 +33,10 @@ class SettingsWindow(QWidget):
         tab_background = self.init_tab_bg()
         tabs.addTab(tab_background, 'Scene')
 
+        #themes tab
+        tab_theme = self.init_tab_theme()
+        tabs.addTab(tab_theme, 'Themes')
+
         #layout
         layout = QVBoxLayout()
         self.setLayout(layout)
@@ -389,3 +393,122 @@ class SettingsWindow(QWidget):
             self.settings.set_value('Background', 'image', image[0])
             self.settings.save_config()
             self.mainwindow.update_settings()
+    
+    #create the themes tab
+    def init_tab_theme(self):
+        tab_theme = QWidget()
+
+        self.themes = self.settings.get_theme_list()
+        self.themes_list = QListWidget()
+        self.themes_list.addItems(self.themes)
+        
+        themes_add = QPushButton('Save New')
+        themes_add.clicked.connect(lambda: self.add_theme())
+
+        themes_apply = QPushButton('Apply')
+        themes_apply.clicked.connect(lambda: self.apply_theme())
+
+        themes_rename = QPushButton('Rename')
+        themes_rename.clicked.connect(lambda: self.rename_theme())
+
+        themes_duplicate = QPushButton('Duplicate')
+        themes_duplicate.clicked.connect(lambda: self.duplicate_theme())
+
+        themes_delete = QPushButton('Delete')
+        themes_delete.clicked.connect(lambda: self.delete_theme())
+
+        tab_theme_layout = QGridLayout()
+        tab_theme.setLayout(tab_theme_layout)
+        tab_theme_layout.addWidget(self.themes_list, 0, 0, 5, 1)
+        tab_theme_layout.addWidget(themes_add, 0, 1)
+        tab_theme_layout.addWidget(themes_apply, 1, 1)
+        tab_theme_layout.addWidget(themes_rename, 2, 1)
+        tab_theme_layout.addWidget(themes_duplicate, 3, 1)
+        tab_theme_layout.addWidget(themes_delete, 4, 1)
+
+        return tab_theme
+    
+    #add the current theme
+    def add_theme(self):
+        title, ok = QInputDialog.getText(self, 'Name Your Theme', 'Title:')
+        if ok and title:
+            if title in self.themes:
+                print('Theme name taken')
+            elif not title.replace(' ', '').isalnum():
+                print('Theme name can not contain special characters')
+            else:
+                self.settings.save_theme(title)
+                self.themes.append(title)
+                self.themes_list_update()
+
+    #apply selected theme
+    def apply_theme(self):
+        current_row = self.themes_list.currentRow()
+        if current_row >= 0:
+            self.settings.apply_theme(current_row)
+            self.mainwindow.update_settings()
+            self.reload()
+    
+    #rename selected theme
+    def rename_theme(self):
+        current_row = self.themes_list.currentRow()
+        if current_row >= 0:
+            title, ok = QInputDialog.getText(self, 'Name Your Theme', 'Title:')
+            if ok and title:
+                if title in self.themes and title != self.themes[current_row]:
+                    print('Theme name taken')
+                elif not title.replace(' ', '').isalnum():
+                    print('Theme name can not contain special characters')
+                else:
+                    self.settings.rename_theme(current_row, title)
+                    self.themes[current_row] = title
+                    self.themes_list_update()
+    
+    #duplicate selected theme
+    def duplicate_theme(self):
+        current_row = self.themes_list.currentRow()
+        if current_row >= 0:
+            self.settings.duplicate_theme(current_row)
+            self.themes.append(self.themes[current_row]+' Copy')
+            self.themes_list_update()
+    
+    #delete selected theme
+    def delete_theme(self):
+        current_row = self.themes_list.currentRow()
+        if current_row >= 0:
+            self.settings.delete_theme(current_row)
+            self.themes.remove(self.themes[current_row])
+            self.themes_list_update()
+    
+    #update list of themes
+    def themes_list_update(self):
+        self.themes_list.clear()
+        self.themes_list.addItems(self.themes)
+    
+    #reload to get latest settings values
+    def reload(self):
+        self.options = {}
+
+        tabs = QTabWidget()
+
+        #Wheel tab
+        tab_wheel = self.init_tab_wheel()
+        tabs.addTab(tab_wheel, 'Wheel')
+
+        #Text tab
+        tab_text = self.init_tab_text()
+        tabs.addTab(tab_text, 'Titles')
+
+        #background tab
+        tab_background = self.init_tab_bg()
+        tabs.addTab(tab_background, 'Scene')
+
+        #themes tab
+        tab_theme = self.init_tab_theme()
+        tabs.addTab(tab_theme, 'Themes')
+
+        #layout
+        layout = self.layout()
+        for i in reversed(range(layout.count())): 
+            layout.itemAt(i).widget().setParent(None)
+        layout.addWidget(tabs)
