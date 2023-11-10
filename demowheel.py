@@ -11,9 +11,9 @@ from PyQt6.QtGui import QBrush, QPen, QPolygonF, QFont, QPainterPath
 from PyQt6.QtCore import QPointF, QObject, pyqtProperty
 import math
 
-#DemoWheel class
 class DemoWheel(QGraphicsItem):
     def __init__(self, xc, yc, settings):
+        #initialize object and settings
         super(DemoWheel, self).__init__()
         self.xc = xc
         self.yc = yc
@@ -25,20 +25,24 @@ class DemoWheel(QGraphicsItem):
         self.setPos(xc+self.radius, yc+self.radius)
         self.adapter = DemoWheelAdapter(self, self)
 
+        #create the base circle
         wheel = QGraphicsEllipseItem(xc-self.radius, yc-self.radius, diameter, diameter)
         self.wheel_rect = wheel.rect()
 
+        #initiate the color options
         brush = QBrush(settings.get_value('Wheel', 'bg_color'))
         wheel.setBrush(brush)
-
         self.pen = QPen(settings.get_value('Wheel', 'fg_color'))
         self.pen.setWidth(2)
         if not self.multicolor:
             wheel.setPen(self.pen)
             wheel.setParentItem(self)
 
+        #set up the font for the titles
         self.font = QFont()
         self.font.setPointSize(int(settings.get_value('Text', 'font_size')))
+        
+        #create the individual pieces of the wheel
         titles = settings.get_section_list('Titles')
         self.l = len(titles)
         self.arc_length = 360 / self.l
@@ -52,6 +56,7 @@ class DemoWheel(QGraphicsItem):
                 line.setPen(self.pen)
             self.draw_title(titles[i], i+0.5)
 
+    #dynamically create an individual piece for the multicolor option
     def draw_piece(self, x, y, color):
         #make a painter path that draws an arc within the bounds of the wheel from the center to the given point then clockwise for the arc length
         path = QPainterPath(QPointF(self.xc, self.yc))
@@ -63,6 +68,7 @@ class DemoWheel(QGraphicsItem):
         piece.setPen(QPen(color))
         piece.setZValue(-1)
     
+    #put the title in the center of the piece
     def draw_title(self, text, i):
         #get the point in the middle of the piece at 90% of the radius (just inside the circle)
         tx = self.radius * 0.98 * math.cos(2*math.pi*i/self.l) + self.xc
@@ -116,7 +122,7 @@ class DemoWheelAdapter(QObject):
     
     rotation = pyqtProperty(float, __get_rotation, __set_rotation)
 
-#utility for figuring out the rotaion of a title
+#utility for figuring out the rotaion of a title; gives the clockwise angle to turn from the first point to the second point (treating as center of a circle)
 def calc_clockwise_angle(x, y, xc, yc):
     delta = math.sqrt(math.pow(xc-x,2)+math.pow(yc-y,2))
     if x < xc:

@@ -47,7 +47,7 @@ class Settings():
             self.config['Background'] = {
                 'type': 'Solid',
                 'color': '60,60,60,255',
-                'image': 'images/wave.jpg'
+                'image': ''
             }
             self.config['Button'] = {
                 'bg_color': '224,98,54,255',
@@ -101,7 +101,7 @@ class Settings():
             value = str(value.getRgb()).replace('(', '').replace(')', '').replace(' ', '')
         self.config[section][setting] = str(value)
 
-    #reset the settings of the specified section with the given list of values
+    #change the settings of the specified section to the given list of values
     def set_section_list(self, section, setting, values):
         self.config[section] = {}
         for i in range(len(values)):
@@ -116,13 +116,14 @@ class Settings():
                 theme_config.read(entry.path)
                 self.themes.append(theme_config)
     
-    #get list of themes
+    #get list of theme names
     def get_theme_list(self):
         theme_list = []
         for theme in self.themes:
             theme_list.append(theme['Theme']['title'])
         return theme_list
 
+    #create and save a new theme with the current configuration
     def save_theme(self, title):
         #generate new config to capture settings, add Theme section
         theme_config = configparser.ConfigParser()
@@ -149,16 +150,19 @@ class Settings():
         with open('./themes/'+filename+'.ini', 'w') as configfile:
             theme_config.write(configfile)
         
+        #add to running themes list
         self.themes.append(theme_config)
 
     #set current config to chosen theme
     def apply_theme(self, index):
-        #copy theme config into new config
+        #copy theme config into current config
         for section in self.themes[index]:
             if section != 'Theme':
                 self.config[section] = {}
                 for setting in self.themes[index][section]:
                     self.config.set(section, setting, self.themes[index][section][setting])
+        
+        #save
         self.save_config()
     
     #change the title of an existing theme
@@ -211,6 +215,7 @@ class Settings():
         with open('./themes/'+filename+'.ini', 'w') as configfile:
             theme_config.write(configfile)
         
+        #add to running themes list
         self.themes.append(theme_config)
     
     #delete a theme

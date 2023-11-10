@@ -65,6 +65,7 @@ class SettingsWindow(QWidget):
     def init_tab_text(self):
         tab_text = QWidget()
 
+        #basic text options
         text_size = SettingWidget('Text Size', float(self.settings.get_value('Text', 'font_size')))
         text_size.get_control().setRange(1, 100)
         text_size.get_control().valueChanged.connect(lambda: self.change_value('Text', 'font_size'))
@@ -85,6 +86,7 @@ class SettingsWindow(QWidget):
             'shadow_color': text_shadow_color
         }
 
+        #custom widget for manipulating the list of titles
         text_titles_container = QWidget()
 
         self.text_titles = self.settings.get_section_list('Titles')
@@ -111,6 +113,7 @@ class SettingsWindow(QWidget):
         text_titles_layout.addWidget(text_titles_up, 2, 1)
         text_titles_layout.addWidget(text_titles_down, 3, 1)
 
+        #fill the tab with the controls
         tab_text_layout = QVBoxLayout()
         tab_text.setLayout(tab_text_layout)
         for w in self.options['Text']:
@@ -165,6 +168,7 @@ class SettingsWindow(QWidget):
     def init_tab_wheel(self):
         tab_wheel = QWidget()
 
+        #basic wheel settings
         wheel_size = SettingWidget('Wheel Size', 0.0)
         wheel_size.get_control().setRange(100, 1000)
         wheel_size.get_control().setValue(float(self.settings.get_value('Wheel', 'size')))
@@ -176,7 +180,6 @@ class SettingsWindow(QWidget):
 
         wheel_fg_color = SettingWidget('Line Color', self.settings.get_value('Wheel', 'fg_color'))
         wheel_fg_color.get_control().clicked.connect(lambda: self.get_color('Wheel', 'fg_color'))
-        wheel_fg_color.setHidden(True)
 
         bg_type = self.settings.get_value('Wheel', 'bg_type')
         wheel_bg_type = SettingWidget('Background Type', bg_type)
@@ -185,6 +188,7 @@ class SettingsWindow(QWidget):
         wheel_bg_type.get_control().setCurrentText(bg_type)
         wheel_bg_type.get_control().activated.connect(lambda: self.wheel_bg_type_change())
 
+        #custom widget for manipulating the list of wheel colors
         wheel_colors_container = QWidget()
         wheel_colors_container.setHidden(True)
 
@@ -220,15 +224,15 @@ class SettingsWindow(QWidget):
 
         if bg_type == 'Solid':
             wheel_bg_color.setHidden(False)
-            wheel_fg_color.setHidden(False)
         elif bg_type == 'Multicolor':
             wheel_colors_container.setHidden(False)
         
+        #fill the tab with the controls
         self.options['Wheel'] = {
             'size': wheel_size,
+            'fg_color': wheel_fg_color,
             'bg_type': wheel_bg_type,
             'bg_color': wheel_bg_color,
-            'fg_color': wheel_fg_color,
             'bg_color_list': wheel_colors_container
         }
 
@@ -246,11 +250,9 @@ class SettingsWindow(QWidget):
 
         if bg_type == 'Solid':
             self.options['Wheel']['bg_color'].setHidden(False)
-            self.options['Wheel']['fg_color'].setHidden(False)
             self.options['Wheel']['bg_color_list'].setHidden(True)
         elif bg_type == 'Multicolor':
             self.options['Wheel']['bg_color'].setHidden(True)
-            self.options['Wheel']['fg_color'].setHidden(True)
             self.options['Wheel']['bg_color_list'].setHidden(False)
         
         self.settings.save_config()
@@ -305,6 +307,7 @@ class SettingsWindow(QWidget):
     def init_tab_bg(self):
         tab_bg = QWidget()
 
+        #build controls for background settings
         current_bg_type = self.settings.get_value('Background', 'type')
         bg_type = SettingWidget('Background Type', current_bg_type)
         bg_type.get_control().addItem('Solid')
@@ -349,6 +352,7 @@ class SettingsWindow(QWidget):
         button_disable_text = SettingWidget('Disabled Text Color', self.settings.get_value('Button', 'fg_disable_color'))
         button_disable_text.get_control().clicked.connect(lambda: self.get_color('Button', 'fg_disable_color'))
 
+        #fill the tab with the controls
         self.options['Button'] = {
             'bg_color': button_color,
             'fg_color': button_text,

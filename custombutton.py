@@ -10,8 +10,10 @@ from PyQt6.QtGui import QBrush, QPen, QFont
 
 class CustomButton(QGraphicsRectItem):
     def __init__(self, settings, onclick, parent=None):
+        #give the button the passed function as its click action
         self.onclick = onclick
         
+        #initialize colors and other required information, create rect position below and centered on the wheel given the current settings
         radius = float(settings.get_value('Wheel', 'size')) / 2
         height = radius * 0.2
         rect = QRectF(radius-height, radius*2+25, height*2, height)
@@ -25,12 +27,15 @@ class CustomButton(QGraphicsRectItem):
         self.disable_pen = QPen(settings.get_value('Button', 'fg_disable_color'))
         self.disable_pen.setWidth(2)
         
+        #initialize the object
         super(CustomButton, self).__init__(rect, parent)
         self.setBrush(self.normal_brush)
         self.setPen(self.normal_pen)
 
+        #allow the object to listen for various mouse events
         self.setAcceptHoverEvents(True)
 
+        #create and place the text centered on the button
         font = QFont()
         font.setPixelSize(int(height/2))
         self.text = QGraphicsTextItem('SPIN', self)
@@ -43,13 +48,13 @@ class CustomButton(QGraphicsRectItem):
         if self.brush() == self.hover_brush:
             self.onclick()
     
-    #override to change color when entered
+    #override to change color when mouse enters
     def hoverEnterEvent(self, event):
         self.setBrush(self.hover_brush)
         self.setPen(self.hover_pen)
         self.text.setDefaultTextColor(self.hover_pen.color())
 
-    #override to return to original color when left
+    #override to return to original color when mouse leaves
     def hoverLeaveEvent(self, event):
         self.set_normal()
     

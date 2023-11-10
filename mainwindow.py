@@ -52,7 +52,7 @@ class MainWindow(QMainWindow):
     def spin(self):
         self.toggle_spinning()
         diameter = float(self.settings.get_value('Wheel', 'size'))
-        self.spin_anim.setDuration(1500)
+        self.spin_anim.setDuration(2000)
         self.spin_anim.setEndValue(2*diameter+random.random()*360)
         self.spin_anim.start()
 
@@ -70,6 +70,7 @@ class MainWindow(QMainWindow):
         else:
             self.canvas_view.setStyleSheet("border-image: none")
 
+    #initiate the scene and add the custom components
     def draw_scene(self):
         self.canvas = QGraphicsScene()
         self.wheel = DemoWheel(0, 0, self.settings)
@@ -86,6 +87,7 @@ class MainWindow(QMainWindow):
         self.spin_anim.setEasingCurve(QEasingCurve.Type.OutCubic)
         self.spin_anim.finished.connect(lambda: self.toggle_spinning())
 
+    #create the pointer object
     def draw_pointer(self):
         radius = float(self.settings.get_value('Wheel', 'size')) / 2
         base = radius * 0.2

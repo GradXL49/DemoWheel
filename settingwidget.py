@@ -20,7 +20,7 @@ class SettingWidget(QWidget):
         self.label = QLabel(label+':')
         layout.addWidget(self.label)
 
-        #create and add control
+        #dynamically create and add control
         if isinstance(value, QColor):
             self.control = QPushButton()
             self.control.setStyleSheet('background-color: rgba'+str(value.getRgb()))
@@ -39,9 +39,11 @@ class SettingWidget(QWidget):
             print('ERROR: Unexpected value type.')
         layout.addWidget(self.control)
     
+    #get the associated control widget
     def get_control(self):
         return self.control
     
+    #get the current value of the control widget
     def get_value(self):
         try:
             value = self.control.value()
