@@ -109,12 +109,17 @@ class Settings():
     
     #load all the available themes
     def load_themes(self):
-        files = os.scandir('./themes')
-        for entry in files:
-            if entry.is_file() and entry.name.endswith('.ini'):
-                theme_config = configparser.ConfigParser()
-                theme_config.read(entry.path)
-                self.themes.append(theme_config)
+        if os.path.exists('./themes'):
+            files = os.scandir('./themes')
+            for entry in files:
+                if entry.is_file() and entry.name.endswith('.ini'):
+                    theme_config = configparser.ConfigParser()
+                    theme_config.read(entry.path)
+                    self.themes.append(theme_config)
+        else:
+            os.mkdir('./themes')
+        if not os.path.exists('./images'):
+                os.mkdir('./images')
     
     #get list of theme names
     def get_theme_list(self):
