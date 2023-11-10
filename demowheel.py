@@ -40,23 +40,17 @@ class DemoWheel(QGraphicsItem):
         self.font = QFont()
         self.font.setPointSize(int(settings.get_value('Text', 'font_size')))
         titles = settings.get_section_list('Titles')
-        l = len(titles)
-        self.arc_length = 360 / l
-        for i in range(l):
-            x = self.radius * math.cos(2*math.pi*i/l) + xc
-            y = self.radius * math.sin(2*math.pi*i/l) + yc
+        self.l = len(titles)
+        self.arc_length = 360 / self.l
+        for i in range(self.l):
+            x = self.radius * math.cos(2*math.pi*i/self.l) + xc
+            y = self.radius * math.sin(2*math.pi*i/self.l) + yc
             if self.multicolor:
                 self.draw_piece(x, y, self.bg_colors[i%len(self.bg_colors)])
             else:
                 line = QGraphicsPolygonItem(QPolygonF([QPointF(xc, yc),QPointF(x, y)]), self)
                 line.setPen(self.pen)
-            if i == 0:
-                xy1 = [x,y]
-                xy = [x,y]
-            else:
-                self.draw_title(titles[i], x, y, xy[0], xy[1])
-                xy = [x,y]
-        self.draw_title(titles[0], xy[0], xy[1], xy1[0], xy1[1])
+            self.draw_title(titles[i], i+0.5)
 
     def draw_piece(self, x, y, color):
         #make a painter path that draws an arc within the bounds of the wheel from the center to the given point then clockwise for the arc length
@@ -69,30 +63,32 @@ class DemoWheel(QGraphicsItem):
         piece.setPen(QPen(color))
         piece.setZValue(-1)
     
-    def draw_title(self, text, x1, y1, x2, y2):
-        #get the point directly center of the two incoming points
-        tx = (x1+x2)/2
-        ty = (y1+y2)/2
-        
-        #treat the line between those points as a right triangle to find an offset point on that line
-        if x1 == x2:
-            theta = math.atan(0)
-        else:
-            theta = math.atan((y2-y1)/(x2-x1))
-        offset = self.font.pointSize()*16/12 #convert point size to pixels
-        if ty > self.yc:
-            offset = -offset
-        off_x = offset * math.cos(theta)
-        off_y = offset * math.sin(theta)
+    def draw_title(self, text, i):
+        #get the point in the middle of the piece at 90% of the radius (just inside the circle)
+        tx = self.radius * 0.98 * math.cos(2*math.pi*i/self.l) + self.xc
+        ty = self.radius * 0.98 * math.sin(2*math.pi*i/self.l) + self.yc
 
-        #creat the text and place at calculated point
+        #create and configure the text, rotate towards center
         title = QGraphicsTextItem(text, self)
-        title.setPos(tx+off_x, ty+off_y)
         angle = calc_clockwise_angle(tx, ty, self.xc, self.yc) #rotate towards the center of the wheel
         title.setRotation(angle)
         title.setFont(self.font)
         title.setDefaultTextColor(self.settings.get_value('Text', 'text_color'))
         title.setZValue(1)
+
+        #treat the line perpendicular to the found point as a right triangle to find an offset point on that line
+        if ty == self.yc:
+            theta = math.atan(0)
+        else:
+            theta = math.atan(-((self.xc-tx)/(self.yc-ty))) #use the slope of the tangent line by calculating negative reciprocal of slope to center
+        offset = title.boundingRect().height()/2
+        if ty >= self.yc:
+             offset = -offset
+        off_x = offset * math.cos(theta)
+        off_y = offset * math.sin(theta)
+        
+        #place centered at the calculated point with offset
+        title.setPos(tx+off_x, ty+off_y)
 
         #optionally display a shadow inline and slightly below the original text
         if self.settings.get_value('Text', 'shadow_bool'):
