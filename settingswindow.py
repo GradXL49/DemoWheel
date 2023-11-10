@@ -428,18 +428,34 @@ class SettingsWindow(QWidget):
 
         return tab_theme
     
+    #check the given title to make sure it's acceptable
+    def check_title(self, title):
+        valid = True
+
+        if title == '' or not title.replace(' ', '').isalnum():
+            dlg = QMessageBox(self)
+            dlg.setWindowTitle('Invalid Theme Name')
+            dlg.setText("Theme names can't be empty and must not contain special characters.")
+            dlg.exec()
+            valid = False
+        else:
+            for theme in self.themes:
+                if title.lower() == theme.lower():
+                    dlg = QMessageBox(self)
+                    dlg.setWindowTitle('Theme Name Taken')
+                    dlg.setText('The name entered is already in use. Theme names must be unique.')
+                    valid = False
+                    dlg.exec()
+        
+        return valid
+    
     #add the current theme
     def add_theme(self):
         title, ok = QInputDialog.getText(self, 'Name Your Theme', 'Title:')
-        if ok and title:
-            if title in self.themes:
-                print('Theme name taken')
-            elif not title.replace(' ', '').isalnum():
-                print('Theme name can not contain special characters')
-            else:
-                self.settings.save_theme(title)
-                self.themes.append(title)
-                self.themes_list_update()
+        if ok and self.check_title(title):
+            self.settings.save_theme(title)
+            self.themes.append(title)
+            self.themes_list_update()
 
     #apply selected theme
     def apply_theme(self):
@@ -454,15 +470,10 @@ class SettingsWindow(QWidget):
         current_row = self.themes_list.currentRow()
         if current_row >= 0:
             title, ok = QInputDialog.getText(self, 'Name Your Theme', 'Title:')
-            if ok and title:
-                if title in self.themes and title != self.themes[current_row]:
-                    print('Theme name taken')
-                elif not title.replace(' ', '').isalnum():
-                    print('Theme name can not contain special characters')
-                else:
-                    self.settings.rename_theme(current_row, title)
-                    self.themes[current_row] = title
-                    self.themes_list_update()
+            if ok and self.check_title(title):
+                self.settings.rename_theme(current_row, title)
+                self.themes[current_row] = title
+                self.themes_list_update()
     
     #duplicate selected theme
     def duplicate_theme(self):

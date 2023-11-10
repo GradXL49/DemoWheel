@@ -137,7 +137,9 @@ class Settings():
         
         #if there is an image file, copy it to the local image folder
         image = theme_config['Background']['image']
-        if theme_config['Background']['type'] != 'Image' or image != '':
+        if theme_config['Background']['type'] != 'Image':
+            theme_config['Background']['image'] = ''
+        elif image != '':
             ext = image.split('.')
             ext = ext[len(ext)-1]
             os.system('copy '+image.replace('/', '\\')+' images\\'+filename+'.'+ext)
@@ -151,7 +153,13 @@ class Settings():
 
     #set current config to chosen theme
     def apply_theme(self, index):
-        self.config = self.themes[index]
+        #copy theme config into new config
+        for section in self.themes[index]:
+            if section != 'Theme':
+                self.config[section] = {}
+                for setting in self.themes[index][section]:
+                    self.config.set(section, setting, self.themes[index][section][setting])
+        self.save_config()
     
     #change the title of an existing theme
     def rename_theme(self, index, title):
@@ -191,8 +199,9 @@ class Settings():
 
         #if there is an image file, copy it to the local image folder
         image = theme_config['Background']['image']
-        cwd = os.getcwd()
-        if theme_config['Background']['type'] != 'Image' or image != '':
+        if theme_config['Background']['type'] != 'Image':
+            theme_config['Background']['image'] = ''
+        elif image != '':
             ext = image.split('.')
             ext = ext[len(ext)-1]
             os.system('copy '+image.replace('/', '\\')+' images\\'+filename+'.'+ext)

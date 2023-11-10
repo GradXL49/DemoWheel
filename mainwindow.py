@@ -46,6 +46,7 @@ class MainWindow(QMainWindow):
     #opens the settings
     def open_settings(self):
         self.settings_window.show()
+        self.settings_window.activateWindow()
 
     #spins the wheel
     def spin(self):
